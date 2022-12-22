@@ -36,13 +36,11 @@ You could e.g.: have a encryped database as authprovider and could simply requir
 
 Then you never have unencrypted credentials laying around.
 
-These utils also prvide some basic general commands e.g.:
+#### Other skills
 
 - `./script.py _help` generates help message based on doc-string for actions
 - `./script.py _null_subprocess` this will supress all subproess calls and only print the commands
-
-- `./script.py _autocomplete` gives instructions on enabling autocompletion! ( even possible for actions )
-  > ( added soon, only need to refactor old implementation )
+- Full action name and argument **autocompletion** ( optional for your own action if you provide choices )
 
 #### example
 
