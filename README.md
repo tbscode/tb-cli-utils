@@ -52,8 +52,6 @@ Then you never have unencrypted credentials laying around.
 
 </summary>
 
-[hi](https://hello.ca)
-
 | [action]       | aliases                 | **doc**                                                                                                                   | parses own args |
 | -------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------- | --------------- |
 | print_help     | ['?']                   |                                                                                                                           | True            |
