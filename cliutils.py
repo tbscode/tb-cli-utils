@@ -17,7 +17,7 @@ tasks an easily defined by adding the `@register_action` decorator
 e.g.:
 @register_action(alias=["k8", "kubectl"], parse_own_args=True)
 def autenticated_kubectl(args):
-    subprocess.run(["kubectl", **args.unparsed, "-n", "default-namespace"], env={
+    subprocess.run(["kubectl", *args.unparsed, "-n", "default-namespace"], env={
         "KUBE_CONFIG" : "/this/projects/kube/config",
         "AUTH_DATA" : authprovider.get_auth()
     })
@@ -26,7 +26,7 @@ def autenticated_kubectl(args):
 Now you can simply run `./script.py k8 get pods` without switching kube context or namespace.
 You could e.g.: have a encryped database as authprovider and could simply require the password for that on every call.
 
-Then you never have unencrypted credential.
+Then you never have unencrypted credentials laying around.
 
 These utils also prvide some basic general commands e.g.:
 
@@ -34,15 +34,22 @@ These utils also prvide some basic general commands e.g.:
 - `./script.py _autocomplete` gives instructions on enabling autocompletion! ( even possible for actions )
 - `./script.py _null_subprocess` this will supress all subproess calls and only print the commands
 
+for more see example `./script.py`
+
 """
 import sys
 import argparse
 from typing import Optional, Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import partial, wraps
 from copy import deepcopy
 import builtins as __builtin__
 import subprocess
+import argcomplete
+
+
+def get_all_action_names():
+    return [a.name for a in ACTIONS]
 
 
 def get_default_parser():
@@ -55,6 +62,10 @@ def get_default_parser():
 
 
 def get_parser():  # OVERWRITE if you wan custom default arguments!
+    # ADD THIS to your script if you want autocompletion
+    # argcomplete.autocomplete(parser)
+    # If you want autocompletion you might need: ( or checkout `argcomplete` )
+    # eval "$(register-python-argcomplete your-script.py)"
     return get_default_parser()
 
 
@@ -67,7 +78,7 @@ class ActionObj:
     # the fuction that should be executed ( you can also add a labmda if you need preprocessing )
     exec: Optional[Callable]
     # aliases for the action
-    alias: list = []
+    alias: list = field(default_factory=list)
     # Name for action ( set to function name if None )
     name: Optional[str] = None
     # continue executing after action
@@ -80,6 +91,7 @@ class ActionObj:
 
 def manual_register_action(f, **_kwargs):
     _kwargs["name"] = _kwargs.get("name", f.__name__)
+    _kwargs["exec"] = _kwargs.get("exec", f)
     ACTIONS.append(ActionObj(**_kwargs))
 
     @wraps(f)
@@ -92,12 +104,8 @@ def register_action(**kwargs):
     return partial(manual_register_action, **kwargs)
 
 
-def get_all_action_names():
-    return [a.name for a in ACTIONS]
-
-
-@register_action(name="_help", alias=["?"])
-def _print_help(a):
+@register_action(name="print_help", alias=["?"])
+def help(a):
     print(__doc__)
     GLOBAL_PARSER.print_help()
     for act in ACTIONS:
@@ -108,6 +116,24 @@ def _print_help(a):
             print(f"\tinfo: {info}\n")
         else:
             print("\tNo info availabol")
+
+
+@register_action(cont=True, alias=["_null_subprocess"])
+def print_commands(args, extra_out=["C"]):
+    """ 
+    Supress all output from subprocess. (run / check_output / call)
+    AND only print the commands being executed
+    """
+    def _print_command_and_args(*args, **kwargs):
+        print(
+            *extra_out, f"_cmd: `{' '.join(args[0]) if isinstance(args[0], list) else args[0]}`, kwargs: {kwargs}")
+
+        class Placeholder:
+            stdout = ''
+        return Placeholder()
+    subprocess.run = _print_command_and_args
+    subprocess.check_output = _print_command_and_args
+    subprocess.call = _print_command_and_args
 
 
 def get_action_by_alias(alias) -> ActionObj:
@@ -156,5 +182,4 @@ def parse_actions_run():
             break
     if len(a.unparsed) > 1:
         print("there where unhandled extra args: " + " ".join(a.unknown))
-    if not a.silent:
-        print("Script finished!")
+    print("Script finished!")
