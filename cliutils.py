@@ -15,7 +15,7 @@ tasks an easily defined by adding the `@register_action` decorator
 
 ```python
 e.g.:
-@register_action(alias=["k8", "kubectl"], parse_own_args=True)
+@register_action(alias=["k8", "kubectl"], own_args=True)
 def autenticated_kubectl(args):
     subprocess.run(["kubectl", *args.unparsed, "-n", "default-namespace"], env={
         "KUBE_CONFIG" : "/this/projects/kube/config",
@@ -48,16 +48,25 @@ import subprocess
 import argcomplete
 
 
+def get_all_action_and_alias_names():
+    aliases_and_names = []
+    for a in ACTIONS:
+        aliases_and_names += [a.name, *a.alias]
+    return aliases_and_names
+
+
 def get_all_action_names():
     return [a.name for a in ACTIONS]
 
 
-def get_default_parser():
+def get_default_parser(use_argcomplete=False):
 
     parser = argparse.ArgumentParser()
     default_actions = ["help"]
+    action_choices = get_all_action_names(
+    ) if use_argcomplete else get_all_action_and_alias_names()
     parser.add_argument('actions', metavar='A', type=str, default=default_actions,
-                        choices=get_all_action_names(), nargs='*', help='action')
+                        choices=action_choices, nargs='*', help='action')
     return parser
 
 
@@ -70,7 +79,6 @@ def get_parser():  # OVERWRITE if you wan custom default arguments!
 
 
 ACTIONS = []  # Populated with the `@register_action` decorator
-GLOBAL_PARSER = get_parser()
 
 
 @dataclass
@@ -104,10 +112,25 @@ def register_action(**kwargs):
     return partial(manual_register_action, **kwargs)
 
 
-@register_action(name="print_help", alias=["?"])
+@register_action(name="print_help", alias=["?"], own_args=True)
 def help(a):
+    if a.unparsed and "--markdown-table" in a.unparsed:
+        # use `read_unparsed` when u used an argument
+        # then the scipt wont warn about unused arguements
+        a.read_unparsed(a, "--markdown-table")
+        # this will try to generate a markdown table summarizing registered actions
+        from pytablewriter import MarkdownTableWriter
+        writer = MarkdownTableWriter(
+            headers=["[action]", "aliases",
+                     "__doc__", "parses own args"],
+            value_matrix=[
+                [act.name, act.alias, act.exec.__doc__, act.own_args] for act in ACTIONS
+            ],
+        )
+        print(writer.dumps())
+        return
     print(__doc__)
-    GLOBAL_PARSER.print_help()
+    get_parser().print_help()
     for act in ACTIONS:
         print(
             f"action '{act.name}' (with aliases {', '.join(act.alias)})")
@@ -115,7 +138,7 @@ def help(a):
             info = act.exec.__doc__
             print(f"\tinfo: {info}\n")
         else:
-            print("\tNo info availabol")
+            print("\tNo doc string found")
 
 
 @register_action(cont=True, alias=["_null_subprocess"])
@@ -166,10 +189,10 @@ def parse_actions_run():
         a = parse_args()
         setattr(a, 'unparsed', [])
 
-    def read_unparsed(a):
-        _u = a.unparsed
-        a.unparsed = []
-        return _u
+    def read_unparsed(a, args):
+        for _a in (args if isinstance(args, list) else [args]):
+            if _a in a:
+                delattr(a, _a)
     setattr(a, 'read_unparsed', read_unparsed)
 
     for action in a.actions if isinstance(a.actions, list) else [a.actions]:
