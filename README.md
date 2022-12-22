@@ -48,7 +48,7 @@ Then you never have unencrypted credentials laying around.
 <details>
 <summary>
 
-(click) `./script.py print_help --markdown-table`
+(click!) `./script.py print_help --markdown-table`
 
 </summary>
 
