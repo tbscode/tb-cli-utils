@@ -17,6 +17,7 @@ e.g.:
 
 ```python
 #!/usr/bin/env python3
+import subprocess
 from cliutils import *
 
 @register_action(alias=["k8", "kubectl"], parse_own_args=True)
@@ -42,3 +43,7 @@ These utils also prvide some basic general commands e.g.:
 
 - `./script.py _autocomplete` gives instructions on enabling autocompletion! ( even possible for actions )
   > ( added soon, only need to refactor old implementation )
+
+#### example
+
+see `./script.py`
