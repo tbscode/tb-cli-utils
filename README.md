@@ -13,14 +13,21 @@ general syntax:
 
 tasks an easily defined by adding the `@register_action` decorator
 
-```python
 e.g.:
+
+```python
+#!/usr/bin/env python3
+from cliutils import *
+
 @register_action(alias=["k8", "kubectl"], parse_own_args=True)
 def autenticated_kubectl(args):
     subprocess.run(["kubectl", **args.unparsed, "-n", "default-namespace"], env={
         "KUBE_CONFIG" : "/this/projects/kube/config",
         "AUTH_DATA" : authprovider.get_auth()
     })
+
+if __name__ == "__main__":
+    parse_actions_run()
 ```
 
 Now you can simply run `./script.py k8 get pods` without switching kube context or namespace.
