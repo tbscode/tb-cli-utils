@@ -41,6 +41,18 @@ Then you never have unencrypted credentials laying around.
 - `./script.py _help` generates help message based on doc-string for actions
 - `./script.py _null_subprocess` this will supress all subproess calls and only print the commands
 - Full action name and argument **autocompletion** ( optional for your own action if you provide choices )
+- Generates readable overview of actions
+
+#### generated action summary
+
+`./script.py print_help --markdown-table`
+
+| [action]       | aliases                 | **doc**                                                                                                                   | parses own args |
+| -------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------- | --------------- |
+| print_help     | ['?']                   |                                                                                                                           | True            |
+| print_commands | ['_null_subprocess']    | Supress all output from subprocess. (run / check_output / call) AND only print the commands being executed                | False           |
+| complete       | ['activate_completion'] | I dont use argompletes global completion. This allowes you to simply dispatch into a bash session with completion enabled | False           |
+| kubectl        | ['k8']                  |                                                                                                                           | False           |
 
 #### example
 
