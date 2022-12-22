@@ -45,7 +45,14 @@ Then you never have unencrypted credentials laying around.
 
 #### generated action summary
 
-`./script.py print_help --markdown-table`
+<details>
+<summary>
+
+(click) `./script.py print_help --markdown-table`
+
+</summary>
+
+[hi](https://hello.ca)
 
 | [action]       | aliases                 | **doc**                                                                                                                   | parses own args |
 | -------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------- | --------------- |
@@ -53,6 +60,8 @@ Then you never have unencrypted credentials laying around.
 | print_commands | ['_null_subprocess']    | Supress all output from subprocess. (run / check_output / call) AND only print the commands being executed                | False           |
 | complete       | ['activate_completion'] | I dont use argompletes global completion. This allowes you to simply dispatch into a bash session with completion enabled | False           |
 | kubectl        | ['k8']                  |                                                                                                                           | False           |
+
+</details>
 
 #### example
 
