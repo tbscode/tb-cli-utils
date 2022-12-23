@@ -43,7 +43,6 @@ from typing import Optional, Callable
 from dataclasses import dataclass, field
 from functools import partial, wraps
 from copy import deepcopy
-import builtins as __builtin__
 import subprocess
 import argcomplete
 
@@ -70,11 +69,23 @@ def get_default_parser(use_argcomplete=False):
     return parser
 
 
+@dataclass
+class Q_Opt:
+    s1: str = ""
+    s2: str = ""
+    choices: Optional[list] = None
+
+
+def quick_parser(simple_args: 'list[Q_Opt]'):
+    parser = argparse.ArgumentParser()
+    for arg in simple_args:
+        parser.add_argument(arg.s1, arg.s2,
+                            **({'choices': arg.choices}
+                               if arg.choices else {}))
+    return parser
+
+
 def get_parser():  # OVERWRITE if you wan custom default arguments!
-    # ADD THIS to your script if you want autocompletion
-    # argcomplete.autocomplete(parser)
-    # If you want autocompletion you might need: ( or checkout `argcomplete` )
-    # eval "$(register-python-argcomplete your-script.py)"
     return get_default_parser()
 
 
@@ -95,6 +106,8 @@ class ActionObj:
     silent: bool = False
     # If the action parses its own args
     own_args: bool = False
+    # an optional parser ( if user wants autocompletion )
+    parser: Optional[Callable] = None
 
 
 def manual_register_action(f, **_kwargs):
@@ -198,11 +211,14 @@ def parse_actions_run():
     for action in a.actions if isinstance(a.actions, list) else [a.actions]:
         act = get_action_by_alias(action)
         assert act.exec, "No exec method defined"
+        if act.parser is not None:
+            a.quick_args, unkn = act.parser.parse_known_args()
+            a.unparsed = unkn
         act.exec(a)
 
         if not act.cont:
             print(f"Ran into final action '{act.name}'")
             break
     if len(a.unparsed) > 1:
-        print("there where unhandled extra args: " + " ".join(a.unknown))
+        print("there where unhandled extra args: " + " ".join(a.unparsed))
     print("Script finished!")
