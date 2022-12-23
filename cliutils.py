@@ -1,42 +1,5 @@
-"""
-Tim's cli utils, 
-this is to quickly build cli utils for managing a buch of relatively independent tasks.
-
-the basic idea is that there are a few general '--' params and a buch of actions, 
-every action parase its own params.
-
-general syntax:
-
-```shell
-./script.py (-c context) [action] [params of action] (-a --b [args of action])
-```
-
-tasks an easily defined by adding the `@register_action` decorator
-
-```python
-e.g.:
-@register_action(alias=["k8", "kubectl"], own_args=True)
-def autenticated_kubectl(args):
-    subprocess.run(["kubectl", *args.unparsed, "-n", "default-namespace"], env={
-        "KUBE_CONFIG" : "/this/projects/kube/config",
-        "AUTH_DATA" : authprovider.get_auth()
-    })
-```
-
-Now you can simply run `./script.py k8 get pods` without switching kube context or namespace.
-You could e.g.: have a encryped database as authprovider and could simply require the password for that on every call.
-
-Then you never have unencrypted credentials laying around.
-
-These utils also prvide some basic general commands e.g.:
-
-- `./script.py _help` generates help message based on doc-string for actions
-- `./script.py _autocomplete` gives instructions on enabling autocompletion! ( even possible for actions )
-- `./script.py _null_subprocess` this will supress all subproess calls and only print the commands
-
-for more see example `./script.py`
-
-"""
+# tb's cli utils,
+import os
 import sys
 import argparse
 from typing import Optional, Callable
@@ -170,6 +133,24 @@ def print_commands(args, extra_out=["C"]):
     subprocess.run = _print_command_and_args
     subprocess.check_output = _print_command_and_args
     subprocess.call = _print_command_and_args
+
+
+@register_action(alias=["activate_completion"],
+                 parser=quick_parser(
+                     [Q_Opt(s1="-sn", s2="--script-name")]),
+                 own_args=True)
+def complete(args):
+    """
+    If you dont use global completion then;
+    this allowes you to simply dispatch into a bash session with completion enabled 
+    example usage: `./script.py complete -sn script.py`
+    """
+    SCRIPT_NAME = args.quick_args.script_name \
+        if args.quick_args.script_name else os.path.basename(__file__)
+    subprocess.run(
+        f"""bash --rcfile <(echo '. ~/.bashrc; eval "$(register-python-argcomplete {SCRIPT_NAME})" ')""",
+        executable='/bin/bash',
+        shell=True, env=os.environ)
 
 
 def get_action_by_alias(alias) -> ActionObj:
