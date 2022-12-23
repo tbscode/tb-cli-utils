@@ -30,6 +30,13 @@ def complete(args):
         shell=True, env=os.environ)
 
 
+@register_action(parser=quick_parser([Q_Opt(s1="-ex", s2="--example")]), own_args=True)
+def example_parse_extra_args(args):
+    print("---->",
+          "Simple example using actions quick args:",
+          "--example", "=", f"'{args.quick_args.example}'")
+
+
 @register_action(alias=["k8"])
 def kubectl(args):
     subprocess.run(["kubectl", *args.unparsed, "-n", "default-namespace"], env={
@@ -39,5 +46,4 @@ def kubectl(args):
 
 
 if __name__ == "__main__":
-    argcomplete.autocomplete(get_parser(True))
     parse_actions_run()
