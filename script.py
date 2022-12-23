@@ -17,13 +17,18 @@ def get_parser(use_argcomplete=False):
 cliutils.get_parser = get_parser
 
 
-@register_action(alias=["activate_completion"])
+@register_action(alias=["activate_completion"],
+                 parser=quick_parser(
+                     [Q_Opt(s1="-sn", s2="--script-name")]),
+                 own_args=True)
 def complete(args):
     """
-    I dont use argompletes global completion.
-    This allowes you to simply dispatch into a bash session with completion enabled 
+    If you dont use global completion then;
+    this allowes you to simply dispatch into a bash session with completion enabled 
+    example usage: `./script.py complete -sn script.py`
     """
-    SCRIPT_NAME = os.path.basename(__file__)
+    SCRIPT_NAME = args.quick_args.script_name \
+        if args.quick_args.script_name else os.path.basename(__file__)
     subprocess.run(
         f"""bash --rcfile <(echo '. ~/.bashrc; eval "$(register-python-argcomplete {SCRIPT_NAME})" ')""",
         executable='/bin/bash',
