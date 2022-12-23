@@ -6,33 +6,21 @@ import os
 import cliutils
 from cliutils import *
 
+cliutils.SCRIPT_NAME = "./script.py"
+
 
 def get_parser(use_argcomplete=False):
-    # autocompletion shouldn't show aliases that is why we pass `use_argcomplete`
+    """
+    You can add elements to the default parser by overwriting get_parser()
+    You can even vary the parser if scanned by argparse, by using the user_argcomplete param
+    if you want to present a limited subset of choices for completion
+    """
     parser = get_default_parser(use_argcomplete)
     parser.add_argument("-env", "--environment")
     return parser
 
 
 cliutils.get_parser = get_parser
-
-
-@register_action(alias=["activate_completion"],
-                 parser=quick_parser(
-                     [Q_Opt(s1="-sn", s2="--script-name")]),
-                 own_args=True)
-def complete(args):
-    """
-    If you dont use global completion then;
-    this allowes you to simply dispatch into a bash session with completion enabled 
-    example usage: `./script.py complete -sn script.py`
-    """
-    SCRIPT_NAME = args.quick_args.script_name \
-        if args.quick_args.script_name else os.path.basename(__file__)
-    subprocess.run(
-        f"""bash --rcfile <(echo '. ~/.bashrc; eval "$(register-python-argcomplete {SCRIPT_NAME})" ')""",
-        executable='/bin/bash',
-        shell=True, env=os.environ)
 
 
 @register_action(parser=quick_parser([Q_Opt(s1="-ex", s2="--example")]), own_args=True)

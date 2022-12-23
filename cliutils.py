@@ -9,6 +9,8 @@ from copy import deepcopy
 import subprocess
 import argcomplete
 
+SCRIPT_NAME = None
+
 
 def get_all_action_and_alias_names():
     aliases_and_names = []
@@ -48,7 +50,7 @@ def quick_parser(simple_args: 'list[Q_Opt]'):
     return parser
 
 
-def get_parser():  # OVERWRITE if you wan custom default arguments!
+def get_parser(use_argcomplete=False):  # OVERWRITE if you wan custom default arguments!
     return get_default_parser()
 
 
@@ -145,12 +147,12 @@ def complete(args):
     this allowes you to simply dispatch into a bash session with completion enabled 
     example usage: `./script.py complete -sn script.py`
     """
-    SCRIPT_NAME = args.quick_args.script_name \
-        if args.quick_args.script_name else os.path.basename(__file__)
-    subprocess.run(
-        f"""bash --rcfile <(echo '. ~/.bashrc; eval "$(register-python-argcomplete {SCRIPT_NAME})" ')""",
-        executable='/bin/bash',
-        shell=True, env=os.environ)
+    name = args.quick_args.script_name \
+        if args.quick_args.script_name else SCRIPT_NAME
+    command = f"""bash --rcfile <(echo '. ~/.bashrc; eval "$(register-python-argcomplete {name})" ')"""
+    subprocess.run(command,
+                   executable='/bin/bash',
+                   shell=True, env=os.environ)
 
 
 def get_action_by_alias(alias) -> ActionObj:
@@ -161,6 +163,8 @@ def get_action_by_alias(alias) -> ActionObj:
 
 
 def parse_actions_run():
+    argcomplete.autocomplete(get_parser(use_argcomplete=False))
+
     def parse_args(_partial=None):
         if _partial:
             a = get_parser().parse_args(_partial)
