@@ -30,7 +30,7 @@ def get_default_parser(use_argcomplete=False):
     action_choices = get_all_action_names(
     ) if use_argcomplete else get_all_action_and_alias_names()
     parser.add_argument('actions', metavar='A', type=str, default=default_actions,
-                        choices=action_choices, nargs='*', help='action')
+                        **(dict(choices=action_choices) if use_argcomplete else {}), nargs='*', help='action')
     return parser
 
 
@@ -184,6 +184,7 @@ def parse_actions_run():
         act = get_action_by_alias(action)
         if act.own_args:
             reparse = (action, True)
+            break
     if reparse[1]:
         assert isinstance(reparse[0], str)
         _partial = sys.argv[1:sys.argv.index(reparse[0])+1]
