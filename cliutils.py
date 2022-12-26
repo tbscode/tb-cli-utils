@@ -137,6 +137,12 @@ def print_commands(args, extra_out=["C"]):
     subprocess.call = _print_command_and_args
 
 
+def get_environment_as_dict(path: str) -> dict:
+    with open(path, 'r') as f:
+        return dict(tuple(line.replace('\n', '').split('=')) for line
+                    in f.readlines() if not line.startswith('#'))
+
+
 @register_action(alias=["activate_completion"],
                  parser=quick_parser(
                      [Q_Opt(s1="-sn", s2="--script-name")]),
