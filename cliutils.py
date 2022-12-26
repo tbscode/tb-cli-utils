@@ -51,7 +51,7 @@ def quick_parser(simple_args: 'list[Q_Opt]'):
 
 
 def get_parser(use_argcomplete=False):  # OVERWRITE if you wan custom default arguments!
-    return get_default_parser()
+    return get_default_parser(use_argcomplete=use_argcomplete)
 
 
 ACTIONS = []  # Populated with the `@register_action` decorator
@@ -169,7 +169,7 @@ def get_action_by_alias(alias) -> ActionObj:
 
 
 def parse_actions_run():
-    argcomplete.autocomplete(get_parser(use_argcomplete=False))
+    argcomplete.autocomplete(get_parser(use_argcomplete=True))
 
     def parse_args(_partial=None):
         if _partial:
